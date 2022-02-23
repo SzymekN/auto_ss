@@ -40,7 +40,7 @@ def simple_error(imageA, imageB):
 
                 similarities -= 1
 
-        if similarities / pixel_count < 0.98:
+        if similarities / pixel_count < 0.95:
 
             print(similarities / pixel_count)
             global image_count
@@ -52,28 +52,26 @@ toplist, winlist = [], []
 def enum_cb(hwnd, results):
     winlist.append((hwnd, win32gui.GetWindowText(hwnd)))
 
+image_count = 0
 
 if __name__ == "__main__":
 
-    hwnd = win32gui.FindWindow(None, 'Michał Twaróg | Microsoft Teams')
+    # hwnd = win32gui.FindWindow(None, 'Michał Twaróg | Microsoft Teams')
 
     win32gui.EnumWindows(enum_cb, toplist)
-    # print(winlist)
     teams = [(hwnd, title) for hwnd, title in winlist if '| microsoft teams' in title.lower()]
-    for window in teams:
-        print(window)
+
+    # for window in teams:
+    #     print(window)
+
     # just grab the hwnd for first window matching teams
     print(len(teams))
     teams = teams[0]
     print(teams)
     hwnd = teams[0]
 
-    # Change the line below depending on whether you want the whole window
-    # or just the client area. 
-    #left, top, right, bot = win32gui.GetClientRect(hwnd)
-    # left, top, right, bot = win32gui.GetWindowRect(hwnd)
+    # get screen size
     w, h = pyautogui.size()
-
 
     hwndDC = win32gui.GetWindowDC(hwnd)
     mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
@@ -87,61 +85,74 @@ if __name__ == "__main__":
     # Change the line below depending on whether you want the whole window
     # or just the client area. 
     result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
-    # result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 0)
-    print (result)
 
     # win32gui.SetForegroundWindow(hwnd)
     bmpinfo = saveBitMap.GetInfo()
     bmpstr = saveBitMap.GetBitmapBits(True)
 
-    im = Image.frombuffer(
+    im1 = Image.frombuffer(
         'RGB',
         (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
         bmpstr, 'raw', 'BGRX', 0, 1)
 
-    win32gui.DeleteObject(saveBitMap.GetHandle())
-    saveDC.DeleteDC()
-    mfcDC.DeleteDC()
-    win32gui.ReleaseDC(hwnd, hwndDC)
+    # win32gui.DeleteObject(saveBitMap.GetHandle())
+    # saveDC.DeleteDC()
+    # mfcDC.DeleteDC()
+    # win32gui.ReleaseDC(hwnd, hwndDC)
 
     if result == 1:
         #PrintWindow Succeeded
-        im.show("test.png")
+        im1.save("ss0.png")
 
 
     # im1 = ImageGrab.grab()  # X1,Y1,X2,Y2
     # im1.save("ss0.png")
     # image_count = 0
 
-    run = False
+    run = True
 
-    # win32gui.EnumWindows(enum_cb, toplist)
-    # # print(winlist)
-    # firefox = [(hwnd, title) for hwnd, title in winlist if '| microsoft teams' in title.lower()]
-    # for window in firefox:
-    #     print(window)
-    # # just grab the hwnd for first window matching firefox
-    # print(len(firefox))
-    # firefox = firefox[0]
-    # print(firefox)
-    # hwnd = firefox[0]
+    while run:
+
+        time.sleep(1)
+        start = time.time()
+        
+        saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
+        saveDC.SelectObject(saveBitMap)
+
+        # Change the line below depending on whether you want the whole window
+        # or just the client area. 
+        result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
+
+        # win32gui.SetForegroundWindow(hwnd)
+        bmpinfo = saveBitMap.GetInfo()
+        bmpstr = saveBitMap.GetBitmapBits(True)
+
+        im2 = Image.frombuffer(
+            'RGB',
+            (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
+            bmpstr, 'raw', 'BGRX', 0, 1)
+
+        # win32gui.DeleteObject(saveBitMap.GetHandle())
+        # saveDC.DeleteDC()
+        # mfcDC.DeleteDC()
+        # win32gui.ReleaseDC(hwnd, hwndDC)
+
+        if result == 1:
+            #PrintWindow Succeeded
+            simple_error(im1, im2)
+            im1 = im2
 
 
-    # win32gui.SetForegroundWindow(hwnd)
-    # bbox = win32gui.GetWindowRect(hwnd)
-    # print(bbox)
-    # img = ImageGrab.grab(bbox)
-    # img.show()
 
-    # while run:
+        # im2 = ImageGrab.grab()  # X1,Y1,X2,Y2
+        # simple_error(im1, im2)
 
-    #     time.sleep(0.1)
-    #     start = time.time()
+        # im1 = im2  # X1,Y1,X2,Y2
+        end = time.time()
+        print("time: ", end - start)
 
-    #     im2 = ImageGrab.grab()  # X1,Y1,X2,Y2
-    #     simple_error(im1, im2)
-
-    #     im1 = im2  # X1,Y1,X2,Y2
-    #     end = time.time()
-    #     print("time: ", end - start)
+    win32gui.DeleteObject(saveBitMap.GetHandle())
+    saveDC.DeleteDC()
+    mfcDC.DeleteDC()
+    win32gui.ReleaseDC(hwnd, hwndDC)
 
