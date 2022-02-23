@@ -1,6 +1,7 @@
-import pyscreenshot as ImageGrab
+from PIL import ImageGrab
 from numpy import asarray
 import time
+import win32gui
 
 
 # def mse(imageA, imageB):
@@ -40,21 +41,46 @@ def simple_error(imageA, imageB):
             imageB.save("ss"+str(image_count)+".png")
             return
 
+toplist, winlist = [], []
+def enum_cb(hwnd, results):
+    winlist.append((hwnd, win32gui.GetWindowText(hwnd)))
+
+
 if __name__ == "__main__":
 
-    im1 = ImageGrab.grab()  # X1,Y1,X2,Y2
-    im1.save("ss0.png")
-    image_count = 0
+    # im1 = ImageGrab.grab()  # X1,Y1,X2,Y2
+    # im1.save("ss0.png")
+    # image_count = 0
 
-    while True:
+    run = False
 
-        time.sleep(0.1)
-        start = time.time()
+    win32gui.EnumWindows(enum_cb, toplist)
+    # print(winlist)
+    firefox = [(hwnd, title) for hwnd, title in winlist if '| microsoft teams' in title.lower()]
+    for window in firefox:
+        print(window)
+    # just grab the hwnd for first window matching firefox
+    print(len(firefox))
+    firefox = firefox[0]
+    print(firefox)
+    hwnd = firefox[0]
 
-        im2 = ImageGrab.grab()  # X1,Y1,X2,Y2
-        simple_error(im1, im2)
 
-        im1 = im2  # X1,Y1,X2,Y2
-        end = time.time()
-        print("time: ", end - start)
+    win32gui.SetForegroundWindow(hwnd)
+    bbox = win32gui.GetWindowRect(hwnd)
+    print(bbox)
+    img = ImageGrab.grab(bbox)
+    img.show()
+
+    # while run:
+
+    #     time.sleep(0.1)
+    #     start = time.time()
+
+    #     im2 = ImageGrab.grab()  # X1,Y1,X2,Y2
+    #     simple_error(im1, im2)
+
+    #     im1 = im2  # X1,Y1,X2,Y2
+    #     end = time.time()
+    #     print("time: ", end - start)
 
