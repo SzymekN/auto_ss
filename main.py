@@ -2,28 +2,15 @@ from PIL import ImageGrab
 from numpy import asarray
 import time
 import win32gui
-import win32api
 import win32ui
-import win32com
 from ctypes import windll
-import ctypes
 from PIL import Image as Image
 import pyautogui
+from docx import Document
+from docx.shared import Inches
 
-
-# def mse(imageA, imageB):
-# 	# the 'Mean Squared Error' between the two images is the
-# 	# sum of the squared difference between the two images;
-# 	# NOTE: the two images must have the same dimension
-# 	err = sum((imageA.astype("float") - imageB.astype("float")) ** 2)
-# 	err /= float(imageA.shape[0] * imageA.shape[1])
-	
-# 	# return the MSE, the lower the error, the more "similar"
-# 	# the two images are
-# 	return err
 
 def simple_error(imageA, imageB):
-    
 
     im1_arr = asarray(imageA)
     im2_arr = asarray(imageB)
@@ -46,6 +33,8 @@ def simple_error(imageA, imageB):
             global image_count
             image_count += 1
             imageB.save("ss"+str(image_count)+".png")
+            doc.add_picture("ss"+str(image_count)+".png")
+            doc.save("test.docx")
             return
 
 toplist, winlist = [], []
@@ -61,8 +50,8 @@ if __name__ == "__main__":
     win32gui.EnumWindows(enum_cb, toplist)
     teams = [(hwnd, title) for hwnd, title in winlist if '| microsoft teams' in title.lower()]
 
-    # for window in teams:
-    #     print(window)
+    for window in teams:
+        print(window)
 
     # just grab the hwnd for first window matching teams
     print(len(teams))
@@ -95,21 +84,16 @@ if __name__ == "__main__":
         (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
         bmpstr, 'raw', 'BGRX', 0, 1)
 
-    # win32gui.DeleteObject(saveBitMap.GetHandle())
-    # saveDC.DeleteDC()
-    # mfcDC.DeleteDC()
-    # win32gui.ReleaseDC(hwnd, hwndDC)
-
     if result == 1:
         #PrintWindow Succeeded
         im1.save("ss0.png")
 
 
-    # im1 = ImageGrab.grab()  # X1,Y1,X2,Y2
-    # im1.save("ss0.png")
-    # image_count = 0
-
     run = True
+
+    doc = Document("test.docx")
+    doc.add_picture("ss0.png")
+    doc.save("test.docx")
 
     while run:
 
