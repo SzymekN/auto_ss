@@ -1,13 +1,18 @@
-from PIL import ImageGrab
-from numpy import asarray
 import time
 import win32gui
 import win32ui
+from pyautogui import size as screen_size
+from numpy import asarray
 from ctypes import windll
 from PIL import Image as Image
-import pyautogui
-from docx import Document
-from docx.shared import Inches
+import atexit
+
+def goodbye(counter):
+    try:
+        with open("counter.txt", 'w') as file:
+            file.write(counter)
+    except:
+        print("couldn't save")
 
 
 def simple_error(imageA, imageB):
@@ -32,9 +37,8 @@ def simple_error(imageA, imageB):
             print(similarities / pixel_count)
             global image_count
             image_count += 1
+            atexit.register(goodbye, image_count)
             imageB.save("ss"+str(image_count)+".png")
-            doc.add_picture("ss"+str(image_count)+".png")
-            doc.save("test.docx")
             return
 
 toplist, winlist = [], []
@@ -50,8 +54,8 @@ if __name__ == "__main__":
     win32gui.EnumWindows(enum_cb, toplist)
     teams = [(hwnd, title) for hwnd, title in winlist if '| microsoft teams' in title.lower()]
 
-    for window in teams:
-        print(window)
+    # for window in teams:
+    #     print(window)
 
     # just grab the hwnd for first window matching teams
     print(len(teams))
@@ -60,7 +64,7 @@ if __name__ == "__main__":
     hwnd = teams[0]
 
     # get screen size
-    w, h = pyautogui.size()
+    w, h = screen_size()
 
     hwndDC = win32gui.GetWindowDC(hwnd)
     mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
@@ -84,16 +88,23 @@ if __name__ == "__main__":
         (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
         bmpstr, 'raw', 'BGRX', 0, 1)
 
+    try:
+        with open("counter.txt", 'r') as file:
+            image_count = int(file.read())
+    except:
+        image_count = 0
+
+    # try:
+    #     counter_file = open("counter.txt", "w")
+    # except:
+    #     print("Couldn't open file")
+
     if result == 1:
         #PrintWindow Succeeded
         im1.save("ss0.png")
 
 
     run = True
-
-    doc = Document("test.docx")
-    doc.add_picture("ss0.png")
-    doc.save("test.docx")
 
     while run:
 
@@ -139,4 +150,6 @@ if __name__ == "__main__":
     saveDC.DeleteDC()
     mfcDC.DeleteDC()
     win32gui.ReleaseDC(hwnd, hwndDC)
+
+
 
