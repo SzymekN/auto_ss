@@ -8,135 +8,126 @@ from ctypes import windll
 from PIL import Image as Image
 
 def goodbye():
-    global image_count
-    try:
-        with open("counter.txt", 'w') as file:
-            file.write(str(image_count))
-    except:
-        print("couldn't save")
+    # try:
+    #     with open("counter.txt", 'w') as file:
+    #         file.write(str(image_count))
+    # except:
+    #     print("couldn't save")
+
+    # win32gui.DeleteObject(saveBitMap.GetHandle())
+    # saveDC.DeleteDC()
+    # mfcDC.DeleteDC()
+    # win32gui.ReleaseDC(hwnd, hwndDC)
+    pass
+        
+
+class Auto_ss():
+
+    def enum_cb(self, hwnd, results):
+        self.winlist.append((hwnd, win32gui.GetWindowText(hwnd)))
+
+    def _get_window_handle(self):
+        win32gui.EnumWindows(self.enum_cb, self.toplist)
+        teams = [(hwnd, title) for hwnd, title in self.winlist if self.window_name in title.lower()]
+        teams = teams[0]
+        print(teams)
+        self.hwnd = teams[0]
+
+    def _get_display_handle(self):
+        hwndDC = win32gui.GetWindowDC(self.hwnd)
+        self.mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
+        self.saveDC = self.mfcDC.CreateCompatibleDC()
+
+    def take_screenshot(self):
+
+        self.saveBitMap.CreateCompatibleBitmap(self.mfcDC, self.w, self.h)
+        self.saveDC.SelectObject(self.saveBitMap)
+
+        # Change the line below depending on whether you want the whole window
+        # or just the client area. 
+        result = windll.user32.PrintWindow(self.hwnd, self.saveDC.GetSafeHdc(), 3)
+
+        # win32gui.SetForegroundWindow(hwnd)
+        bmpinfo = self.saveBitMap.GetInfo()
+        bmpstr = self.saveBitMap.GetBitmapBits(True)
+
+        im = Image.frombuffer(
+            'RGB',
+            (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
+            bmpstr, 'raw', 'BGRX', 0, 1)
+        
+        if result == 1:
+            return im
+        else:
+            print("WARNING! Couldn't take screenshot")
+            exit()
+
+    def _get_counter(self):
+        try:
+            with open("counter.txt", 'r') as file:
+                self.image_count = int(file.read())
+        except:
+            self.image_count = 0
+
+    def __init__(self) -> None:
+
+        # window_name = '| microsoft teams'
+        self.window_name = "opera"
+        self.toplist, self.winlist = [], []
+        self.w, self.h = screen_size()
+
+        self._get_window_handle()
+        self._get_display_handle()
+        self.saveBitMap = win32ui.CreateBitmap()
+        self._get_counter()
+
+    def simple_error(self, imageA, imageB):
+
+        im1_arr = asarray(imageA)
+        im2_arr = asarray(imageB)
+        
+        width, height = imageA.size
+        pixel_count = width * height
+        similarities = pixel_count
+
+        for y in range(height):
+
+            for x in range(width):
+
+                # check pixel by pixel if R channels are same
+                if im1_arr[y][x][0] != im2_arr[y][x][0]:
+                    similarities -= 1
+
+            # if similarity is lesser than given % same img and return
+            if similarities / pixel_count < 0.95:
+
+                print(similarities / pixel_count)
+                self.image_count += 1
+                imageB.save("ss"+str(self.image_count)+".png")
+                return
 
 
-
-
-def simple_error(imageA, imageB):
-
-    im1_arr = asarray(imageA)
-    im2_arr = asarray(imageB)
-    
-    width, height = imageA.size
-    pixel_count = width * height
-    similarities = pixel_count
-
-    for y in range(height):
-
-        for x in range(width):
-
-            # check pixel by pixel if R channels are same
-            if im1_arr[y][x][0] != im2_arr[y][x][0]:
-                similarities -= 1
-
-        # if similarity is lesser than given % same img and return
-        if similarities / pixel_count < 0.95:
-
-            print(similarities / pixel_count)
-            global image_count
-            image_count += 1
-            imageB.save("ss"+str(image_count)+".png")
-            return
-
-toplist, winlist = [], []
-def enum_cb(hwnd, results):
-    winlist.append((hwnd, win32gui.GetWindowText(hwnd)))
-
-image_count = 0
 
 if __name__ == "__main__":
 
-    # window_name = '| microsoft teams'
-    window_name = "opera"
-    win32gui.EnumWindows(enum_cb, toplist)
-    teams = [(hwnd, title) for hwnd, title in winlist if window_name in title.lower()]
+    atexit.register(goodbye)
+    auto_ss = Auto_ss()
 
-    # for window in teams:
-    #     print(window)
-
-    # grab the hwnd for first window matching teams
-    # print(len(teams))
-    teams = teams[0]
-    print(teams)
-    hwnd = teams[0]
-
-    # get screen size
-    w, h = screen_size()
-
-    hwndDC = win32gui.GetWindowDC(hwnd)
-    mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
-    saveDC = mfcDC.CreateCompatibleDC()
-
-    saveBitMap = win32ui.CreateBitmap()
-    saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
-
-    saveDC.SelectObject(saveBitMap)
-
-    # Change the line below depending on whether you want the whole window
-    # or just the client area. 
-    result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
-
-    # win32gui.SetForegroundWindow(hwnd)
-    bmpinfo = saveBitMap.GetInfo()
-    bmpstr = saveBitMap.GetBitmapBits(True)
-
-    im1 = Image.frombuffer(
-        'RGB',
-        (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
-        bmpstr, 'raw', 'BGRX', 0, 1)
-
-    try:
-        with open("counter.txt", 'r') as file:
-            image_count = int(file.read())
-    except:
-        image_count = 0
-
-    atexit.register(goodbye, image_count)
-
-    if result == 1:
-        #PrintWindow Succeeded
-        im1.save("ss0.png")
+    image1 = auto_ss.take_screenshot()
+    image1.save("ss0.png")
 
     while True:
 
         time.sleep(1)
         start = time.time()
-        
-        saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
-        saveDC.SelectObject(saveBitMap)
 
-        # Change the line below depending on whether you want the whole window
-        # or just the client area. 
-        result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
-
-        # force window to foreground
-        # win32gui.SetForegroundWindow(hwnd)
-        bmpinfo = saveBitMap.GetInfo()
-        bmpstr = saveBitMap.GetBitmapBits(True)
-
-        im2 = Image.frombuffer(
-            'RGB',
-            (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
-            bmpstr, 'raw', 'BGRX', 0, 1)
-
-        if result == 1:
-            #PrintWindow Succeeded
-            simple_error(im1, im2)
-            im1 = im2
+        image2 = auto_ss.take_screenshot()
+        auto_ss.simple_error(image1, image2)
+        image1 = image2
 
         end = time.time()
         print("time: ", end - start)
 
-    win32gui.DeleteObject(saveBitMap.GetHandle())
-    saveDC.DeleteDC()
-    mfcDC.DeleteDC()
-    win32gui.ReleaseDC(hwnd, hwndDC)
 
 
 
