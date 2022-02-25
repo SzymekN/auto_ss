@@ -1,25 +1,22 @@
+from lib2to3.pgen2.token import NEWLINE
 import time
 import win32gui
 import win32ui
 import atexit
+import keyboard
 from pyautogui import size as screen_size
 from numpy import asarray
 from ctypes import windll
 from PIL import Image as Image
 
-def goodbye():
-    # try:
-    #     with open("counter.txt", 'w') as file:
-    #         file.write(str(image_count))
-    # except:
-    #     print("couldn't save")
+def goodbye(auto_ss):
 
-    # win32gui.DeleteObject(saveBitMap.GetHandle())
-    # saveDC.DeleteDC()
-    # mfcDC.DeleteDC()
-    # win32gui.ReleaseDC(hwnd, hwndDC)
-    pass
-        
+    try:
+        with open("counter.txt", 'w') as file:
+            file.write(str(auto_ss.image_count))
+    except:
+        print("couldn't save")
+            
 
 class Auto_ss():
 
@@ -34,8 +31,8 @@ class Auto_ss():
         self.hwnd = teams[0]
 
     def _get_display_handle(self):
-        hwndDC = win32gui.GetWindowDC(self.hwnd)
-        self.mfcDC  = win32ui.CreateDCFromHandle(hwndDC)
+        self.hwndDC = win32gui.GetWindowDC(self.hwnd)
+        self.mfcDC  = win32ui.CreateDCFromHandle(self.hwndDC)
         self.saveDC = self.mfcDC.CreateCompatibleDC()
 
     def take_screenshot(self):
@@ -106,15 +103,37 @@ class Auto_ss():
                 imageB.save("ss"+str(self.image_count)+".png")
                 return
 
+    def __del__(self):
 
+        win32gui.DeleteObject(self.saveBitMap.GetHandle())
+        self.saveDC.DeleteDC()
+        self.mfcDC.DeleteDC()
+        win32gui.ReleaseDC(self.hwnd, self.hwndDC)
+
+def set_counter(auto_ss, number=-1):
+    pass    
 
 if __name__ == "__main__":
 
-    atexit.register(goodbye)
     auto_ss = Auto_ss()
+    atexit.register(goodbye, auto_ss)
 
     image1 = auto_ss.take_screenshot()
     image1.save("ss0.png")
+
+    # key_pressed = False
+    # keyboard.on_press('space', set_counter, args=-1)
+    # keyboard.add_hotkey('0', set_counter, args=0)
+    # print("Press 0 to start naming from 0, space to continue from previous run")
+    # print("Default: continue numeration\n")
+
+    # for sec in range(5,0,-1):
+    #     if key_pressed:
+    #         break
+    #     print(sec, end=".. ", flush=True)
+    #     time.sleep(1)
+
+    # print("\n")
 
     while True:
 
