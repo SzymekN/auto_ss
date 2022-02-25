@@ -1,18 +1,21 @@
 import time
 import win32gui
 import win32ui
+import atexit
 from pyautogui import size as screen_size
 from numpy import asarray
 from ctypes import windll
 from PIL import Image as Image
-import atexit
 
-def goodbye(counter):
+def goodbye():
+    global image_count
     try:
         with open("counter.txt", 'w') as file:
-            file.write(counter)
+            file.write(str(image_count))
     except:
         print("couldn't save")
+
+
 
 
 def simple_error(imageA, imageB):
@@ -28,16 +31,16 @@ def simple_error(imageA, imageB):
 
         for x in range(width):
 
+            # check pixel by pixel if R channels are same
             if im1_arr[y][x][0] != im2_arr[y][x][0]:
-
                 similarities -= 1
 
+        # if similarity is lesser than given % same img and return
         if similarities / pixel_count < 0.95:
 
             print(similarities / pixel_count)
             global image_count
             image_count += 1
-            atexit.register(goodbye, image_count)
             imageB.save("ss"+str(image_count)+".png")
             return
 
@@ -49,16 +52,16 @@ image_count = 0
 
 if __name__ == "__main__":
 
-    # hwnd = win32gui.FindWindow(None, 'Michał Twaróg | Microsoft Teams')
-
+    # window_name = '| microsoft teams'
+    window_name = "opera"
     win32gui.EnumWindows(enum_cb, toplist)
-    teams = [(hwnd, title) for hwnd, title in winlist if '| microsoft teams' in title.lower()]
+    teams = [(hwnd, title) for hwnd, title in winlist if window_name in title.lower()]
 
     # for window in teams:
     #     print(window)
 
-    # just grab the hwnd for first window matching teams
-    print(len(teams))
+    # grab the hwnd for first window matching teams
+    # print(len(teams))
     teams = teams[0]
     print(teams)
     hwnd = teams[0]
@@ -94,19 +97,13 @@ if __name__ == "__main__":
     except:
         image_count = 0
 
-    # try:
-    #     counter_file = open("counter.txt", "w")
-    # except:
-    #     print("Couldn't open file")
+    atexit.register(goodbye, image_count)
 
     if result == 1:
         #PrintWindow Succeeded
         im1.save("ss0.png")
 
-
-    run = True
-
-    while run:
+    while True:
 
         time.sleep(1)
         start = time.time()
@@ -118,6 +115,7 @@ if __name__ == "__main__":
         # or just the client area. 
         result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 3)
 
+        # force window to foreground
         # win32gui.SetForegroundWindow(hwnd)
         bmpinfo = saveBitMap.GetInfo()
         bmpstr = saveBitMap.GetBitmapBits(True)
@@ -127,22 +125,11 @@ if __name__ == "__main__":
             (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
             bmpstr, 'raw', 'BGRX', 0, 1)
 
-        # win32gui.DeleteObject(saveBitMap.GetHandle())
-        # saveDC.DeleteDC()
-        # mfcDC.DeleteDC()
-        # win32gui.ReleaseDC(hwnd, hwndDC)
-
         if result == 1:
             #PrintWindow Succeeded
             simple_error(im1, im2)
             im1 = im2
 
-
-
-        # im2 = ImageGrab.grab()  # X1,Y1,X2,Y2
-        # simple_error(im1, im2)
-
-        # im1 = im2  # X1,Y1,X2,Y2
         end = time.time()
         print("time: ", end - start)
 
