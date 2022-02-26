@@ -1,4 +1,3 @@
-from lib2to3.pgen2.token import NEWLINE
 import time
 import win32gui
 import win32ui
@@ -110,42 +109,70 @@ class Auto_ss():
         self.mfcDC.DeleteDC()
         win32gui.ReleaseDC(self.hwnd, self.hwndDC)
 
-def set_counter(auto_ss, number=-1):
-    pass    
+    def set_counter(self, control, number):
+        
+        control.key_pressed = True
+        if number > -1:
+            self.image_count = number   
+        
+class LoopControl():
+
+    def __init__(self) -> None:
+        self.key_pressed = False
+        self.paused = False
+        self.run = True
+
+    def pause(self):
+        self.paused = not self.paused
+        self.run = not self.run
 
 if __name__ == "__main__":
 
     auto_ss = Auto_ss()
+    control = LoopControl()
     atexit.register(goodbye, auto_ss)
 
+    keyboard.add_hotkey('space', auto_ss.set_counter, args=[control, -1])
+    keyboard.add_hotkey('0', auto_ss.set_counter, args=[control, 0])
+    print("Press 0 to start naming from 0, space to continue from previous run")
+    print("Default: continue numeration\n")
+
+    for sec in range(5,0,-1):
+        if control.key_pressed:
+            control.key_pressed = False
+            break
+        print(sec, end=".. ", flush=True)
+        time.sleep(1)
+
+    keyboard.unregister_all_hotkeys()
+
+    print("\nCounting from "+str(auto_ss.image_count))
+
     image1 = auto_ss.take_screenshot()
-    image1.save("ss0.png")
+    image1.save("ss"+str(auto_ss.image_count)+".png")
 
-    # key_pressed = False
-    # keyboard.on_press('space', set_counter, args=-1)
-    # keyboard.add_hotkey('0', set_counter, args=0)
-    # print("Press 0 to start naming from 0, space to continue from previous run")
-    # print("Default: continue numeration\n")
-
-    # for sec in range(5,0,-1):
-    #     if key_pressed:
-    #         break
-    #     print(sec, end=".. ", flush=True)
-    #     time.sleep(1)
-
-    # print("\n")
+    print("Press ctrl+p to pause/continue")
+    keyboard.add_hotkey('ctrl+p', control.pause)
 
     while True:
 
-        time.sleep(1)
-        start = time.time()
+        while control.run:
+            time.sleep(1)
+            start = time.time()
 
-        image2 = auto_ss.take_screenshot()
-        auto_ss.simple_error(image1, image2)
-        image1 = image2
+            image2 = auto_ss.take_screenshot()
+            auto_ss.simple_error(image1, image2)
+            image1 = image2
 
-        end = time.time()
-        print("time: ", end - start)
+            end = time.time()
+            print("time: ", end - start)
+
+        print("PAUSE")
+        while control.paused:
+            time.sleep(0.2)
+
+        print("CONTINUE")
+        
 
 
 
