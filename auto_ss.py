@@ -1,7 +1,7 @@
 import win32gui
 import win32ui
 from pyautogui import size as screen_size
-from numpy import asarray
+from numpy import asarray, count_nonzero
 from ctypes import windll
 from PIL import Image as Image
 
@@ -95,10 +95,13 @@ class Auto_ss():
     def __init__(self) -> None:
         '''Get all needed data to make screenshots of one app'''
 
-        # window_name = '| microsoft teams'
+        # self.window_name = '| microsoft teams'
         self.window_name = "opera"
         self.toplist, self.winlist = [], []
-        self.w, self.h = screen_size()
+
+        # uncomment when you have your app on main screen
+        # self.w, self.h = screen_size()
+        self.w, self.h = 1920, 1080
         self.min_similarity = 0.95
 
         self._get_window_handle()
@@ -106,31 +109,46 @@ class Auto_ss():
         self.saveBitMap = win32ui.CreateBitmap()
         self._get_counter()
 
+    def save_screenshot(self, image):
+        '''Save image and counter'''
+
+        print("saving ss"+str(self.image_count)+".png...")
+        image.save("ss"+str(self.image_count)+".png")
+        self.image_count += 1
+
+        try:
+            with open("counter.txt", 'w') as file:
+                file.write(str(self.image_count))
+
+        except:
+            print("couldn't save")
+            
+
     def simple_error(self, imageA, imageB):
         '''Calculate how many differences are in particular pixels on two images'''
 
         im1_arr = asarray(imageA)
         im2_arr = asarray(imageB)
+
+        differences = count_nonzero(im1_arr != im2_arr)
+        # wszystkie = w * h * 3
         
         width, height = self.w, self.h
-        pixel_count = width * height
-        similarities = pixel_count
+        # all subpixels 
+        all_subpixels = width * height * 3
+        print(differences/(all_subpixels))
 
-        for y in range(height):
+        if self.min_similarity == 1:
+            self.save_screenshot(imageB)
+            return True
 
-            for x in range(width):
 
-                # check pixel by pixel if R channels are same
-                if im1_arr[y][x][0] != im2_arr[y][x][0]:
-                    similarities -= 1
-
-            # if similarity is lesser than given % same img and return
-            if similarities / pixel_count < self.min_similarity:
-
-                self.image_count += 1
-                print("saving ss"+str(self.image_count)+".png...")
-                imageB.save("ss"+str(self.image_count)+".png")
-                return
+        # if similarity is lesser than given % save img and return
+        if (differences / all_subpixels) >= ( 1 - self.min_similarity ):
+            self.save_screenshot(imageB)
+            return True
+        
+        return False
 
     def __del__(self):
         '''Delete used contexts'''
@@ -146,3 +164,28 @@ class Auto_ss():
         control.key_pressed = True
         if number > -1:
             self.image_count = number   
+
+    def change_sensitivity(self, value):
+        '''Change needed similarity between two images'''
+
+        if (self.min_similarity >= 1 and value) or (self.min_similarity <= 0 and not value):
+            if self.min_similarity >= 1:
+                print("Max sensitivity")
+            else:
+                print("Min sensitivity")
+            return  
+
+        if value:
+            if self.min_similarity >= 0.99:
+                self.min_similarity += 0.001
+            else:
+                self.min_similarity += 0.01
+        else:
+            if self.min_similarity >= 0.99:
+                self.min_similarity -= 0.001
+            else:
+                self.min_similarity -= 0.01
+        
+        round(self.min_similarity, 3)
+
+        print("Current needed similarity: "+str(self.min_similarity*100)+"%")

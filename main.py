@@ -28,26 +28,35 @@ if __name__ == "__main__":
     print("\nCounting from "+str(auto_ss.image_count))
 
     image1 = auto_ss.take_screenshot()
-    image1.save("ss"+str(auto_ss.image_count)+".png")
+    auto_ss.save_screenshot(image1)
 
-    print("Press ctrl+p to pause/continue")
+    print('''\nPress ctrl+p to pause/continue
+ctrl++ to increase sensitivity
+ctrl+- to decrease sensitivity
+    ''')
+    
     keyboard.add_hotkey('ctrl+p', control.pause)
+    keyboard.add_hotkey('ctrl+plus', auto_ss.change_sensitivity, args=[True,])
+    keyboard.add_hotkey('ctrl+-', auto_ss.change_sensitivity, args=[False,])
 
     while True:
 
         while control.run:
-            sleep(1)
-            start = time()
 
+            # sleep to ignore animations
+            sleep(1)
+
+            # start = time()
             image2 = auto_ss.take_screenshot()
 
             #compare images
-            auto_ss.simple_error(image1, image2)
+            saved = auto_ss.simple_error(image1, image2)
 
-            image1 = image2
+            if saved:
+                image1 = image2
 
-            end = time()
-            print("time: ", end - start)
+            # end = time()
+            # print("time: ", end - start)
 
         print("PAUSE")
         while control.paused:
