@@ -8,6 +8,12 @@ Taking screenshots automatically everytime something changes over some area. Scr
 
 * Program running:
   - ctrl + p - pause / continue script
+  - ctrl + s - take screenshot manually
+  - ctrl + + - increase sensitivity
+  - ctrl + - - decrease sensitivity
+
+# Running program
+![running_program](https://user-images.githubusercontent.com/83112762/156242549-45b0980b-db41-44ac-9c90-1b50190470ca.png)
 
 # Note
 You should always ask organizer for the permission to take screenshots. 
