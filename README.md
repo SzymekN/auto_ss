@@ -10,4 +10,4 @@ Taking screenshots automatically everytime something changes over some area. Scr
   - ctrl + p - pause / continue script
 
 # Note
-You should always ask organizer for permission to take screenshots. 
+You should always ask organizer for the permission to take screenshots. 
