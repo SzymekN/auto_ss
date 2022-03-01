@@ -114,8 +114,8 @@ class Auto_ss():
     def __init__(self) -> None:
         '''Get all needed data to make screenshots of one app'''
 
-        # self.window_name_to_search = '| microsoft teams'
-        self.window_name_to_search = "opera"
+        self.window_name_to_search = '| microsoft teams'
+        # self.window_name_to_search = "opera"
         self.toplist, self.winlist = [], []
 
         # uncomment when you have your app on main screen
