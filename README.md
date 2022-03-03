@@ -1,7 +1,7 @@
 # auto_ss
 Taking screenshots automatically everytime something changes over some area. Script created to automatize making notes on online meetings on MS Teams.
 
-# Program setup:
+# Program setup
   1. First if there are more than one window with similar names you will have to choose which one to record
   2. Then you can reset image counter by pressing 0 or continue counting from last program run by pressing space. If no option is choosen, after 5 seconds continue counting from last run
 
