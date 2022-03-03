@@ -1,7 +1,7 @@
 import win32gui
 import win32ui
 from pyautogui import size as screen_size
-from numpy import asarray, count_nonzero
+from numpy import asarray, count_nonzero, where, interp
 from ctypes import windll
 from PIL import Image as Image
 
@@ -38,8 +38,24 @@ class Auto_ss():
             print("ERROR! No windows found")
             exit()
 
+        choosen_window = 1
+        # pick wanted window
+        if len(windows) > 1:
+
+            for i in range(len(windows)):
+                print(i+1,". ",windows[i][1])
+
+            try:
+                choosen_window = int(input("Choose window: "))
+            except:
+                print("ERROR! Number expected")
+
+            if choosen_window < 1 or choosen_window > len(windows):
+                print("ERROR! Wrong number")
+
+
         # choose first found window with matching title
-        window = windows[0]
+        window = windows[choosen_window-1]
         print(window)
 
         # handle to wanted window
@@ -128,21 +144,25 @@ class Auto_ss():
         self.saveBitMap = win32ui.CreateBitmap()
         self._get_counter()
 
-    def simple_error(self, imageA, imageB):
+    def compare_images(self, imageA, imageB):
         '''Calculate how many differences are in particular pixels on two images'''
-
-        im1_arr = asarray(imageA)
-        im2_arr = asarray(imageB)
-
-        differences = count_nonzero(im1_arr != im2_arr)
-
-        width, height = self.w, self.h
-        all_subpixels = width * height * 3
-        print("Similarity: " + str((1 - (differences / (all_subpixels))) * 100)+"%")
 
         if self.min_similarity == 1:
             self.save_screenshot(imageB)
             return True
+
+        im1_arr = asarray(imageA)
+        im2_arr = asarray(imageB)
+
+        # convert arrays to 8 colors
+        im1_arr_converted = where(im1_arr > 127,1 ,0)
+        im2_arr_converted = where(im2_arr > 127,1 ,0)
+
+        # coun't how many subpixels are different
+        differences = count_nonzero(im1_arr_converted != im2_arr_converted)
+
+        all_subpixels = self.w * self.h * 3
+        print("Similarity: " + str((1 - (differences / (all_subpixels))) * 100)+"%")
 
         # if similarity is lesser than given % save img and return
         if (differences / all_subpixels) >= (1 - self.min_similarity):
@@ -166,27 +186,29 @@ class Auto_ss():
         if number > -1:
             self.image_count = number
 
-    def change_sensitivity(self, value):
+    def change_sensitivity(self, increase):
         '''Change needed similarity between two images'''
 
-        if (self.min_similarity >= 1 and value) or (self.min_similarity <= 0 and not value):
+        if (self.min_similarity >= 1 and increase) or (self.min_similarity <= 0 and not increase):
             if self.min_similarity >= 1:
                 print("Max sensitivity")
             else:
                 print("Min sensitivity")
             return
 
-        if value:
+        value = 0.01
+        if increase:
             if self.min_similarity >= 0.99:
-                self.min_similarity += 0.001
-            else:
-                self.min_similarity += 0.01
+                value = 0.001
+            elif self.min_similarity >= 0.98:
+                value = 0.002
         else:
-            if self.min_similarity >= 0.99:
-                self.min_similarity -= 0.001
-            else:
-                self.min_similarity -= 0.01
+            if self.min_similarity > 0.99:
+                value = -0.001
+            elif self.min_similarity > 0.98:
+                value = -0.002
 
+        self.min_similarity += value
         self.min_similarity = round(self.min_similarity, 3)
 
         print("Current needed similarity: "+str(self.min_similarity*100)+"%")
