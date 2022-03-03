@@ -6,18 +6,22 @@ from atexit import register
 from time import sleep, time
 
 
-def print_menu(auto_ss):
+def print_menu(auto_ss, control):
     '''Print hotkeys and stats'''
     system("cls")
+    print("Project on: https://github.com/SzymekN/auto_ss\n")
     print("Window name: "+auto_ss.window_name_found)
     print('''Hotkeys:
 * ctrl+p to pause/continue
 * ctrl+s to take screenshot manually
 * ctrl++ to increase sensitivity
 * ctrl+- to decrease sensitivity
+* ctrl+w to increase delay
+* ctrl+q to decrease delay
     ''')
     print("Screenshot count: "+str(auto_ss.image_count))
     print("Current sensitivity: "+str(auto_ss.min_similarity*100)+"%")
+    print("Delay: "+str(control.delay)+"s")
 
 
 if __name__ == "__main__":
@@ -30,7 +34,7 @@ if __name__ == "__main__":
 
     keyboard.add_hotkey('space', auto_ss.reset_counter, args=[control, -1])
     keyboard.add_hotkey('0', auto_ss.reset_counter, args=[control, 0])
-    print("Press 0 to start naming from 0, space to continue from previous run")
+    print("\nPress 0 to start naming from 0, space to continue from previous run")
     print("Default: continue numeration\n")
 
     for sec in range(5, 0, -1):
@@ -51,20 +55,22 @@ if __name__ == "__main__":
     keyboard.add_hotkey('ctrl+s', auto_ss.manual_screenshot)
     keyboard.add_hotkey('ctrl+plus', auto_ss.change_sensitivity, args=[True, ])
     keyboard.add_hotkey('ctrl+-', auto_ss.change_sensitivity, args=[False, ])
+    keyboard.add_hotkey('ctrl+w', control.change_delay, args=[True, ])
+    keyboard.add_hotkey('ctrl+q', control.change_delay, args=[False, ])
 
     while True:
 
         while control.run:
 
             # sleep to ignore animations
-            sleep(1)
-            print_menu(auto_ss)
+            sleep(control.delay)
+            print_menu(auto_ss, control)
 
             image2 = auto_ss.take_screenshot()
             # start = time()
 
             # compare images
-            saved = auto_ss.simple_error(image1, image2)
+            saved = auto_ss.compare_images(image1, image2)
 
             # end = time()
             # print("time: ", end - start)
